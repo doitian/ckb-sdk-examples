@@ -52,4 +52,6 @@ if ! [ -f var/miner-account.yaml ]; then
 fi
 MINER_LOCK_ARG="$(sed -n -e 's/lock_arg: //p' var/miner-account.yaml)"
 echo_result miner_lock_arg "$MINER_LOCK_ARG"
+rm -f var/miner-account.key
+ckb-cli account export --lock-arg "$MINER_LOCK_ARG" --extended-privkey-path var/miner-account.key < /dev/null
 popd &>/dev/null
