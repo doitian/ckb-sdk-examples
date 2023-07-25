@@ -55,7 +55,6 @@ sed_i 's/"Debug"\]/"Debug", "Indexer", "IntegrationTest"]/' "$CKB_DIR/ckb.toml"
 sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
 
 cd "$CKB_DIR"
-ckb run &
-CKB_PID="$!"
+CKB_PID="$$"
 echo "$CKB_PID" >"$ROOT_DIR/run/ckb.pid"
-wait "$CKB_PID"
+exec ckb run

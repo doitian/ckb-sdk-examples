@@ -3,3 +3,6 @@
 /ckb_*
 /bin/ckb
 /bin/ckb-cli
+
+# js
+/node_modules

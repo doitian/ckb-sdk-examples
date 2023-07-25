@@ -1,0 +1,21 @@
+{
+  "name": "ckb-sdk-examples",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 jest"
+  },
+  "keywords": [],
+  "author": "Ian Yang",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.3",
+    "jest": "^29.6.1",
+    "wait-port": "^1.0.4"
+  },
+  "dependencies": {
+    "@ckb-lumos/lumos": "^0.20.0"
+  }
+}
