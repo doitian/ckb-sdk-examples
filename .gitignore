@@ -1,4 +1,5 @@
 /var
+/run
 /ckb_*
 /bin/ckb
 /bin/ckb-cli

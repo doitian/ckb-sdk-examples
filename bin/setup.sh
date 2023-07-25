@@ -16,14 +16,6 @@ function unar() {
     esac
 }
 
-function sed_i() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "$@"
-    else
-        sed -i "$@"
-    fi
-}
-
 function echo_section() {
     echo
     echo "======================================================================"
