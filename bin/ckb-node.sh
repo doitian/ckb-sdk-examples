@@ -17,7 +17,7 @@ function sed_i() {
 function kill_and_wait() {
     local pid="$1"
     local -i interval=1
-    kill "$pid"
+    kill "$pid" || return 0
     while kill -0 "$pid"; do
         sleep "$interval"
         interval=interval+interval
@@ -48,6 +48,8 @@ if ! grep -q max_block_bytes "$CKB_DIR/specs/dev.toml"; then
     sed_i '/\[params\]/a\
 max_block_bytes = 100_000_000' "$CKB_DIR/specs/dev.toml"
 fi
+sed_i "s/0xc8328aabcd9b9e8e64fbc566c4385c3bdeb219d7/$MINER_LOCK_ARG/" "$CKB_DIR/specs/dev.toml"
+sed_i "s/0x470dcdc5e44064909650113a274b3b36aecb6dc7/$MINER_LOCK_ARG/" "$CKB_DIR/specs/dev.toml"
 
 sed_i 's/"Debug"\]/"Debug", "Indexer", "IntegrationTest"]/' "$CKB_DIR/ckb.toml"
 sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
