@@ -1,13 +1,59 @@
-import { RPC } from "@ckb-lumos/lumos";
+import * as lumos from "@ckb-lumos/lumos";
+
+const {
+  RPC,
+  Indexer,
+  hd,
+  commons,
+  helpers,
+  config: { getConfig },
+} = lumos;
+
+function secp256k1LockScript(lockArg) {
+  const config = getConfig();
+  const script = config.SCRIPTS["SECP256K1_BLAKE160"];
+  return {
+    codeHash: script.CODE_HASH,
+    hashType: script.HASH_TYPE,
+    args: lockArg,
+  };
+}
 
 const rpc = new RPC(process.env.CKB_RPC_URL);
 
-test('get tip number', async () => {
-  const tip = await rpc.getTipBlockNumber();
-  expect(tip).toBe("0x0");
+afterEach(() => rpc.clearTxPool());
 
-  const indexerTip = await rpc.getIndexerTip();
-  expect(indexerTip).toMatchObject({
-    blockNumber: "0x0"
-  });
+test("miner transfers 100 CKB to alice", async () => {
+  const indexer = new Indexer(process.env.CKB_RPC_URL);
+  const minerAddress = helpers.encodeToAddress(
+    secp256k1LockScript(process.env.MINER_LOCK_ARG)
+  );
+  const aliceAddress = helpers.encodeToAddress(
+    secp256k1LockScript(process.env.ALICE_LOCK_ARG)
+  );
+
+  let txSkeleton = helpers.TransactionSkeleton({ cellProvider: indexer });
+
+  txSkeleton = await commons.common.transfer(
+    txSkeleton,
+    [minerAddress],
+    aliceAddress,
+    BigInt(100 * 10 ** 8)
+  );
+  txSkeleton = await commons.common.payFee(
+    txSkeleton,
+    [minerAddress],
+    BigInt(1 * 10 ** 8)
+  );
+
+  const txForSigning = commons.common.prepareSigningEntries(txSkeleton);
+  const signatures = txForSigning
+    .get("signingEntries")
+    .map(({ message }) =>
+      hd.key.signRecoverable(message, process.env.MINER_PRIVATE_KEY)
+    );
+  const tx = helpers.sealTransaction(txForSigning, signatures.toJSON());
+
+  const txHash = await rpc.sendTransaction(tx);
+  expect(txHash).toMatch(/^0x[0-9a-z]+/);
 });

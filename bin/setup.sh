@@ -77,3 +77,8 @@ echo "BOB_LOCK_ARG=$BOB_LOCK_ARG" >>.env
 echo "BOB_PRIVATE_KEY=0x$(head -1 "$ROOT_DIR/var/bob-account.key")" >>.env
 echo 'CKB_RPC_URL="http://127.0.0.1:8114"' >>.env
 echo_result .env "$ROOT_DIR/.env"
+
+echo_section "List Hashes"
+ckb-node.sh --init-only
+ckb list-hashes -C "$ROOT_DIR/run/ckb-dir" -f json > "$ROOT_DIR/var/hashes.json"
+echo_result hashes "$ROOT_DIR/var/hashes.json"

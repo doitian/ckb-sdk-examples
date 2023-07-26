@@ -33,13 +33,12 @@ if [ -f "$ROOT_DIR/run/ckb.pid" ]; then
     echo "Kill existing ckb process $CKB_PID"
     kill_and_wait "$CKB_PID"
     rm -f "$ROOT_DIR/run/ckb.pid"
-    sleep 3
 fi
 rm -rf "$CKB_DIR"
 
 MINER_LOCK_ARG="$(sed -n -e 's/lock_arg: //p' "$ROOT_DIR/var/miner-account.yaml")"
 echo "Initialize ckb in $CKB_DIR"
-ckb init -C "$CKB_DIR" --chain dev --ba-arg $MINER_LOCK_ARG --ba-message "0x" --force
+ckb init -C "$CKB_DIR" --chain dev --ba-arg $MINER_LOCK_ARG --ba-message "0x" --genesis-message "ckb-sdk-examples" --force
 
 sed_i 's/value = 5000/value = 1000/' "$CKB_DIR/ckb-miner.toml"
 
@@ -56,5 +55,8 @@ sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
 
 cd "$CKB_DIR"
 CKB_PID="$$"
-echo "$CKB_PID" >"$ROOT_DIR/run/ckb.pid"
-exec ckb run
+
+if [ "${1:-}" != "--init-only" ]; then
+  echo "$CKB_PID" >"$ROOT_DIR/run/ckb.pid"
+  exec ckb run
+fi
