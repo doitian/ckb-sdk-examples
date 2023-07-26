@@ -23,10 +23,27 @@ function echo_section() {
     echo "======================================================================"
     echo
 }
+
 function echo_result() {
     local result_name="$1"
     shift
     echo "==> ${result_name}: $*"
+}
+
+function generate_account() {
+    local name="$1"
+    local yaml_file="$ROOT_DIR/var/${name}-account.yaml"
+    local key_file="$ROOT_DIR/var/${name}-account.key"
+    mkdir -p "$(dirname "$yaml_file")"
+    if ! [ -f "$yaml_file" ]; then
+        ckb-cli account new </dev/null >"$yaml_file" 2>/dev/null
+        rm -f "$key_file"
+    fi
+    local lock_arg="$(sed -n -e 's/lock_arg: //p' "$yaml_file")"
+    if ! [ -f "$key_file" ]; then
+        ckb-cli account export --lock-arg "$lock_arg" --extended-privkey-path "$key_file" </dev/null &>/dev/null
+    fi
+    echo "$lock_arg"
 }
 
 echo_section "Install CKB"
@@ -43,15 +60,20 @@ fi
 echo_result path "$(which ckb)"
 echo_result version "$(ckb --version)"
 
-echo_section "Initialze CKB"
-pushd "$ROOT_DIR" &>/dev/null
-if ! [ -f var/miner-account.yaml ]; then
-    mkdir -p var
-    echo "Generate miner account"
-    ckb-cli account new </dev/null >var/miner-account.yaml 2>/dev/null
-fi
-MINER_LOCK_ARG="$(sed -n -e 's/lock_arg: //p' var/miner-account.yaml)"
+echo_section "Generate Accounts"
+MINER_LOCK_ARG="$(generate_account miner)"
 echo_result miner_lock_arg "$MINER_LOCK_ARG"
-rm -f var/miner-account.key
-ckb-cli account export --lock-arg "$MINER_LOCK_ARG" --extended-privkey-path var/miner-account.key < /dev/null
-popd &>/dev/null
+ALICE_LOCK_ARG="$(generate_account alice)"
+echo_result alice_lock_arg "$ALICE_LOCK_ARG"
+BOB_LOCK_ARG="$(generate_account bob)"
+echo_result bob_lock_arg "$BOB_LOCK_ARG"
+
+echo_section "Generate .env"
+echo "MINER_LOCK_ARG=$MINER_LOCK_ARG" >.env
+echo "MINER_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/miner-account.key")" >>.env
+echo "ALICE_LOCK_ARG=$ALICE_LOCK_ARG" >>.env
+echo "ALICE_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/alice-account.key")" >>.env
+echo "BOB_LOCK_ARG=$BOB_LOCK_ARG" >>.env
+echo "BOB_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/bob-account.key")" >>.env
+echo 'CKB_RPC_URL="http://127.0.0.1:8114"' >>.env
+echo_result .env "$ROOT_DIR/.env"
