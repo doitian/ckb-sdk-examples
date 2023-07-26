@@ -70,10 +70,10 @@ echo_result bob_lock_arg "$BOB_LOCK_ARG"
 
 echo_section "Generate .env"
 echo "MINER_LOCK_ARG=$MINER_LOCK_ARG" >.env
-echo "MINER_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/miner-account.key")" >>.env
+echo "MINER_PRIVATE_KEY=0x$(head -1 "$ROOT_DIR/var/miner-account.key")" >>.env
 echo "ALICE_LOCK_ARG=$ALICE_LOCK_ARG" >>.env
-echo "ALICE_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/alice-account.key")" >>.env
+echo "ALICE_PRIVATE_KEY=0x$(head -1 "$ROOT_DIR/var/alice-account.key")" >>.env
 echo "BOB_LOCK_ARG=$BOB_LOCK_ARG" >>.env
-echo "BOB_PRIVATE_KEY=$(head -1 "$ROOT_DIR/var/bob-account.key")" >>.env
+echo "BOB_PRIVATE_KEY=0x$(head -1 "$ROOT_DIR/var/bob-account.key")" >>.env
 echo 'CKB_RPC_URL="http://127.0.0.1:8114"' >>.env
 echo_result .env "$ROOT_DIR/.env"
