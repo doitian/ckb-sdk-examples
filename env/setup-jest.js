@@ -5,7 +5,7 @@ import waitPort from "wait-port";
 import * as lumos from "@ckb-lumos/lumos";
 import "dotenv/config";
 
-import { waitForIndexerReady, createDevConfig } from "./testing";
+import { waitForIndexerReady, createDevConfig } from "./env";
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 let ckbProcess = null;
