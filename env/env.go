@@ -8,6 +8,7 @@ import (
 	"path"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/antelman107/net-wait-go/wait"
 	"github.com/joho/godotenv"
@@ -43,9 +44,12 @@ type CKBProcess struct {
 }
 
 func NewCKBProcess() *CKBProcess {
-	return &CKBProcess{
-		cmd: exec.Command(path.Join(RootDir, "bin", "ckb-node.sh")),
-	}
+	script := path.Join(RootDir, "bin", "ckb-node.sh")
+	cmd := exec.Command(script)
+	cmd.Stdin = nil
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	return &CKBProcess{cmd: cmd}
 }
 
 func (p *CKBProcess) Start() error {
@@ -62,16 +66,40 @@ func (p *CKBProcess) Start() error {
 		return err
 	}
 
-	tip, err := ckbClient.GetTipBlockNumber(context.Background())
-	if err != nil {
+	ctx, cancel := context.WithCancelCause(context.Background())
+
+	if err := WaitUntil(ctx, 2*time.Minute, func() bool {
+		tip, err := ckbClient.GetIndexerTip(ctx)
+		if err != nil {
+			cancel(err)
+			return false
+		}
+
+		return tip != nil
+	}); err != nil {
 		return err
 	}
-
-	fmt.Printf("Tip Number: %d\n", tip)
 
 	return nil
 }
 
 func (p *CKBProcess) Cancel() error {
 	return p.cmd.Cancel()
+}
+
+func WaitUntil(ctx context.Context, timeout time.Duration, pred func() bool) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return context.Cause(ctx)
+		default:
+			if pred() {
+				return nil
+			}
+			time.Sleep(300 * time.Millisecond)
+		}
+	}
 }
