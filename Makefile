@@ -1,4 +1,4 @@
-all: js go
+all: js go java rust
 
 js:
 	pnpm test
@@ -6,4 +6,10 @@ js:
 go:
 	go test -v ./...
 
-.PHONY: all js go
+java:
+	gradle test
+
+rust:
+	cargo run --example 2>&1 | grep -E '^ ' | xargs -n1 cargo run --example
+
+.PHONY: all js go java rust
