@@ -8,11 +8,11 @@ export PATH="$PATH:$ROOT_DIR/bin"
 
 function unar() {
   case "$1" in
-    *.tar.gz) tar -xzf "$1" ;;
-    *)
-      echo "don't know how to extract '$1'..."
-      exit 1
-      ;;
+  *.tar.gz) tar -xzf "$1" ;;
+  *)
+    echo "don't know how to extract '$1'..."
+    exit 1
+    ;;
   esac
 }
 
