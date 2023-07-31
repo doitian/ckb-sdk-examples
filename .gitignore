@@ -10,6 +10,8 @@ desktop.ini
 /ckb_*
 /bin/ckb
 /bin/ckb-cli
+/bin/test
+/bin/main
 
 ### Node ###
 /node_modules
@@ -36,6 +38,7 @@ gradle-app.setting
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+.settings/*.prefs
 
 # Java heap dump
 *.hprof

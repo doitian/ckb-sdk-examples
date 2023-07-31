@@ -7,7 +7,7 @@ go:
 	go test -v ./...
 
 java:
-	gradle test
+	gradle test --rerun -i
 
 rust:
 	cargo run --example 2>&1 | grep -E '^ ' | xargs -n1 cargo run --example
