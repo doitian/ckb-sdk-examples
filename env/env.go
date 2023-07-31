@@ -3,6 +3,7 @@ package env
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -57,7 +58,16 @@ func (p *CKBProcess) Start() error {
 		return err
 	}
 
-	if !wait.New().Do([]string{"127.0.0.1:8114"}) {
+	rawUrl, err := url.Parse(os.Getenv("CKB_RPC_URL"))
+	if err != nil {
+		return err
+	}
+	port := rawUrl.Port()
+	if port == "" {
+		port = "8114"
+	}
+
+	if !wait.New().Do([]string{rawUrl.Hostname() + ":" + port}) {
 		return fmt.Errorf("rpc is not available")
 	}
 
