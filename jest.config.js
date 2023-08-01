@@ -1,4 +1,6 @@
 export default {
-    setupFilesAfterEnv: ['<rootDir>/env/setup-jest.js'],
-    transform: {}
+  maxConcurrency: 1,
+  setupFilesAfterEnv: ["<rootDir>/env/setup-jest.js"],
+  testMatch: ["<rootDir>/examples/**/*.test.js"],
+  transform: {},
 };
