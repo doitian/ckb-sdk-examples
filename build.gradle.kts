@@ -1,6 +1,6 @@
 plugins { java }
 
-sourceSets { test { java { setSrcDirs(listOf("examples")) } } }
+sourceSets { test { java { setSrcDirs(listOf("env", "examples")) } } }
 
 repositories {
   maven { url = uri("https://maven.aliyun.com/repository/public/") }
