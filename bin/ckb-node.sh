@@ -39,6 +39,8 @@ rm -rf "$CKB_DIR"
 MINER_LOCK_ARG="$(sed -n -e 's/lock_arg: //p' "$ROOT_DIR/var/miner-account.yaml")"
 echo "Initialize ckb in $CKB_DIR"
 ckb init -C "$CKB_DIR" --chain dev --ba-arg $MINER_LOCK_ARG --ba-message "0x" --genesis-message "ckb-sdk-examples" --force
+mkdir -p "$CKB_DIR/specs/cells"
+ln -snf "$ROOT_DIR/run/ckb-sdk-examples-capacity-diff" "$CKB_DIR/specs/cells/"
 
 sed_i 's/value = 5000/value = 1000/' "$CKB_DIR/ckb-miner.toml"
 
@@ -53,6 +55,15 @@ sed_i "s/0x470dcdc5e44064909650113a274b3b36aecb6dc7/$MINER_LOCK_ARG/" "$CKB_DIR/
 
 sed_i 's/"Debug"\]/"Debug", "Indexer", "IntegrationTest"]/' "$CKB_DIR/ckb.toml"
 sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
+
+# deploy another copy of secp256k1
+sed_i '/\[genesis\.system_cells_lock\]/c\
+[[genesis.system_cells]]\
+file = { file = "cells/ckb-sdk-examples-capacity-diff" }\
+create_type_id = true\
+capacity = 100_000_0000_0000\
+\
+[genesis.system_cells_lock]' "$CKB_DIR/specs/dev.toml"
 
 cd "$CKB_DIR"
 CKB_PID="$$"

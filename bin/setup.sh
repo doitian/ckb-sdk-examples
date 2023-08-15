@@ -50,7 +50,7 @@ echo_section "Install CKB"
 if ! type -f ckb &>/dev/null; then
   echo "ckb: installing version ckb ${CKB_VERSION}"
   pushd "$ROOT_DIR" &>/dev/null
-  curl -LO "https://github.com/nervosnetwork/ckb/releases/download/${CKB_VERSION}/ckb_${CKB_VERSION}_${CKB_PACKAGE}"
+  curl -fSLO "https://github.com/nervosnetwork/ckb/releases/download/${CKB_VERSION}/ckb_${CKB_VERSION}_${CKB_PACKAGE}"
   unar "ckb_${CKB_VERSION}_${CKB_PACKAGE}"
   rm -f "ckb_${CKB_VERSION}_${CKB_PACKAGE}"
   ln -snf "../ckb_${CKB_VERSION}_${CKB_PACKAGE%%.*}/ckb" bin/ckb
@@ -77,6 +77,12 @@ echo "BOB_LOCK_ARG=$BOB_LOCK_ARG" >>.env
 echo "BOB_PRIVATE_KEY=0x$(head -1 "$ROOT_DIR/var/bob-account.key")" >>.env
 echo 'CKB_RPC_URL="http://127.0.0.1:8114"' >>.env
 echo_result .env "$ROOT_DIR/.env"
+
+echo_section "Download Contracts"
+if ! [ -f "$ROOT_DIR/run/ckb-sdk-examples-capacity-diff" ]; then
+  curl -fsSLo "$ROOT_DIR/run/ckb-sdk-examples-capacity-diff" \
+    "https://github.com/doitian/ckb-sdk-examples-capacity-diff/releases/download/202308151054/ckb-sdk-examples-capacity-diff"
+fi
 
 echo_section "List Hashes"
 ckb-node.sh --init-only
