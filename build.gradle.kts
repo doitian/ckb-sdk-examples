@@ -3,14 +3,12 @@ plugins { java }
 sourceSets { test { java { setSrcDirs(listOf("env", "examples")) } } }
 
 repositories {
-  maven { url = uri("https://maven.aliyun.com/repository/public/") }
-  maven { url = uri("https://maven.aliyun.com/repository/spring/") }
   mavenLocal()
   mavenCentral()
 }
 
 dependencies {
-  implementation("org.nervos.ckb:ckb:2.1.0")
+  implementation("org.nervos.ckb:ckb:2.1.1")
   implementation("com.alibaba:fastjson:2.0.28")
   testImplementation("io.github.cdimascio:dotenv-java:3.0.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")

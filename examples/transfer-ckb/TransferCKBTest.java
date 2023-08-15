@@ -1,10 +1,10 @@
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.nervos.ckb.utils.Numeric.toHexString;
 
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.nervos.ckb.transaction.CkbTransactionBuilder;
+import org.nervos.ckb.utils.Numeric;
 import org.nervos.indexer.InputIterator;
 
 class TransferCKBTest extends Env {
@@ -23,6 +23,6 @@ class TransferCKBTest extends Env {
     devSigner.signTransaction(txWithScriptGroups, privateKey("MINER"));
     // 2. Send transaction to CKB node
     var txHash = assertDoesNotThrow(() -> rpc.sendTransaction(txWithScriptGroups.txView), "Send Transaction");
-    System.out.println(toHexString(txHash));
+    System.out.println(Numeric.toHexString(txHash));
   }
 }

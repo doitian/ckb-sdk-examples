@@ -63,7 +63,8 @@ file = { file = "cells/ckb-sdk-examples-capacity-diff" }\
 create_type_id = true\
 capacity = 100_000_0000_0000\
 \
-[genesis.system_cells_lock]' "$CKB_DIR/specs/dev.toml"
+[genesis.system_cells_lock]\
+' "$CKB_DIR/specs/dev.toml"
 
 cd "$CKB_DIR"
 CKB_PID="$$"
