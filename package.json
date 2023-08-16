@@ -17,6 +17,11 @@
     "wait-port": "^1.0.4"
   },
   "dependencies": {
-    "@ckb-lumos/lumos": "^0.20.0"
+    "@ckb-lumos/lumos": "^0.20.0",
+    "@ckb-lumos/base": "^0.20.0",
+    "@ckb-lumos/codec": "^0.20.0",
+    "@ckb-lumos/rpc": "^0.20.0",
+    "@ckb-lumos/common-scripts": "^0.20.0",
+    "immutable": "^4.3.0"
   }
 }

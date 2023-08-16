@@ -17,8 +17,8 @@ function sed_i() {
 function kill_and_wait() {
   local pid="$1"
   local -i interval=1
-  kill "$pid" || return 0
-  while kill -0 "$pid"; do
+  kill "$pid" &>/dev/null || return 0
+  while kill -0 "$pid" &>/dev/null; do
     sleep "$interval"
     interval=interval+interval
     if ((interval > 10)); then

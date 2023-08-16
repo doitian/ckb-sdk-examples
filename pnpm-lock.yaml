@@ -1,13 +1,28 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@ckb-lumos/base':
+    specifier: ^0.20.0
+    version: 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
+  '@ckb-lumos/codec':
+    specifier: ^0.20.0
+    version: 0.20.0
+  '@ckb-lumos/common-scripts':
+    specifier: ^0.20.0
+    version: 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
   '@ckb-lumos/lumos':
     specifier: ^0.20.0
     version: 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
+  '@ckb-lumos/rpc':
+    specifier: ^0.20.0
+    version: 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
+  immutable:
+    specifier: ^4.3.0
+    version: 4.3.2
 
 devDependencies:
   '@types/jest':
@@ -424,7 +439,7 @@ packages:
       '@ckb-lumos/helpers': 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
       '@ckb-lumos/rpc': 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
       '@ckb-lumos/toolkit': 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
-      immutable: 4.3.1
+      immutable: 4.3.2
     transitivePeerDependencies:
       - cross-fetch
       - debug
@@ -470,7 +485,7 @@ packages:
       '@ckb-lumos/config-manager': 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
       '@ckb-lumos/toolkit': 0.20.0(cross-fetch@3.1.8)(jsbi@4.3.0)
       bech32: 2.0.0
-      immutable: 4.3.1
+      immutable: 4.3.2
     transitivePeerDependencies:
       - cross-fetch
       - jsbi
@@ -1530,8 +1545,8 @@ packages:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
     dev: false
 
-  /immutable@4.3.1:
-    resolution: {integrity: sha512-lj9cnmB/kVS0QHsJnYKD1uo3o39nrbKxszjnqS9Fr6NB7bZzW45U6WSGBPKXDL/CvDKqDNPA4r3DoDQ8GTxo2A==}
+  /immutable@4.3.2:
+    resolution: {integrity: sha512-oGXzbEDem9OOpDWZu88jGiYCvIsLHMvGw+8OXlpsvTFvIQplQbjg1B1cvKg8f7Hoch6+NGjpPsH1Fr+Mc2D1aA==}
     dev: false
 
   /import-local@3.1.0:

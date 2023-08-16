@@ -1,21 +1,22 @@
+import * as lumos from "@ckb-lumos/lumos";
+import { ResultFormatter } from "@ckb-lumos/rpc";
+import fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
-import * as lumos from "@ckb-lumos/lumos";
 
-const {
-  RPC,
-  BI,
-  config: { createConfig },
-} = lumos;
+const { BI } = lumos;
 
 export const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
-export function createDevConfig() {
+export function readHashes() {
   const rawdata = fs.readFileSync(`${rootDir}/var/hashes.json`);
-  const hashes = JSON.parse(rawdata);
+  return JSON.parse(rawdata);
+}
 
-  return createConfig({
+export function createDevConfig() {
+  const hashes = readHashes();
+
+  return {
     PREFIX: "ckt",
     SCRIPTS: {
       SECP256K1_BLAKE160: {
@@ -45,12 +46,10 @@ export function createDevConfig() {
         DEP_TYPE: "code",
       },
     },
-  });
+  };
 }
 
-export async function waitForIndexerReady(blockNumber) {
-  const rpc = new RPC(process.env.CKB_RPC_URL);
-
+export async function waitForIndexerReady(rpc, blockNumber) {
   blockNumber = BI.from(blockNumber);
   let tip = await rpc.getIndexerTip();
   while (
@@ -61,4 +60,35 @@ export async function waitForIndexerReady(blockNumber) {
     await new Promise((r) => setTimeout(r, 300));
     tip = await rpc.getIndexerTip();
   }
+}
+
+export async function mine(rpc, count) {
+  if (!rpc.generateBlock) {
+    rpc.addMethod({
+      name: "generateBlock",
+      method: "generate_block",
+      paramsFormatters: [],
+      resultFormatters: ResultFormatter.toHash,
+    });
+  }
+
+  const expectedTip = BI.from(await rpc.getTipBlockNumber()).add(count);
+
+  while (count > 0) {
+    const tipHash = (await rpc.getTipHeader()).hash;
+    const minedHash = await rpc.generateBlock();
+    if (tipHash !== minedHash) {
+      count -= 1;
+    }
+  }
+  await waitForIndexerReady(rpc, expectedTip);
+}
+
+/**
+ * @param rpc {import("@ckb-lumos/lumos").RPC}
+ */
+export async function mineToCommitted(rpc, txHash, step) {
+  do {
+    await mine(rpc, step);
+  } while ((await rpc.getTransaction(txHash)).txStatus.status !== "committed");
 }
