@@ -9,7 +9,7 @@ The JAVA SDK provides two tools for transaction handling: [CkbTransactionBuilder
 
 ## Transaction Builder
 
-The `CkbTransactionBuilder` can register handlers for both type scripts and lock scripts through [TransactionBuilderConfiguration]. Upon calling `CkbTransactionBuilder#build`, the builder will sequentially execute the `buildTransaction` method of all registered handlers.
+The `CkbTransactionBuilder` can register `ScriptHandler`s for both type scripts and lock scripts through [TransactionBuilderConfiguration]. Upon calling `CkbTransactionBuilder#build`, the builder will sequentially execute the `Scripthandler#buildTransaction` method of all registered handlers.
 
 ```java
 public boolean buildTransaction(AbstractTransactionBuilder txBuilder, ScriptGroup scriptGroup, Object context);
@@ -34,3 +34,9 @@ The `signTransaction` is called once for each matched script group and context p
 
 [ScriptSigner]: https://github.com/nervosnetwork/ckb-sdk-java/blob/master/core/src/main/java/org/nervos/ckb/sign/ScriptSigner.java
 [Context]: https://github.com/nervosnetwork/ckb-sdk-java/blob/master/core/src/main/java/org/nervos/ckb/sign/Context.java
+
+## Issues
+
+-   The interfaces `ScriptHandler` and `ScriptSigner` are lack of Javadoc documentations.
+-   `ScriptSigner` is not able to access cell input details and header deps.
+-   `Api` does not expose the method to call an arbitrary RPC method.
