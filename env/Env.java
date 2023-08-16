@@ -81,7 +81,7 @@ public abstract class Env {
     waitForIndexer(expectedTip);
   }
 
-  static void mineToCommited(byte[] txHash, int step) throws IOException, InterruptedException {
+  static void mineToCommitted(byte[] txHash, int step) throws IOException, InterruptedException {
     do {
       mine(step);
     } while (rpc.getTransaction(txHash).txStatus.status != TransactionWithStatus.Status.COMMITTED);

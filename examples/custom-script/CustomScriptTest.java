@@ -214,7 +214,7 @@ class CustomScriptTest extends Env {
       txHash = assertDoesNotThrow(() -> rpc.sendTransaction(txWithScriptGroups.txView), "Send Transaction");
     }
 
-    mineToCommited(txHash, 3);
+    mineToCommitted(txHash, 3);
 
     // now create a transaction with the custom lock script
     {
