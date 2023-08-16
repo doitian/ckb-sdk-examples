@@ -7,7 +7,14 @@ import { values as valueClasses, blockchain } from "@ckb-lumos/base";
 // this utility function is not exposed in @ckb-lums/lumos
 import { addCellDep } from "@ckb-lumos/common-scripts/lib/helper";
 
-const { BI, RPC, Indexer, commons, hd } = lumos;
+const {
+  BI,
+  RPC,
+  Indexer,
+  commons,
+  hd,
+  helpers: { TransactionSkeleton },
+} = lumos;
 
 // Compare two objects by convert them to molecule buffer to ignore the representation only
 // differences.
@@ -33,7 +40,6 @@ const capacityDiffLockInfo = {
   hashType: "type",
   lockScriptInfo: {
     CellCollector: class {
-      // 1. The collect should provide cells owned by the script. This is done in the constructor, which apply the query options on the cell collector.
       constructor(fromInfo, cellProvider, { config, queryOptions }) {
         if (!cellProvider) {
           throw new Error(`Cell provider is missing!`);
@@ -41,7 +47,8 @@ const capacityDiffLockInfo = {
         config ??= lumos.config.getConfig();
         const script = commons.parseFromInfo(fromInfo, { config }).fromScript;
 
-        // **Important**: cell collector is called for each fromInfo, pay attention to not provide inputs cells for account not locked by this script
+        // Please note that the cell collector is called for each specific fromInfo.
+        // Be cautious not to include input cells for accounts that are not locked by this script.
         const template = config.SCRIPTS.CAPACITY_DIFF;
         if (
           script.codeHash !== template.CODE_HASH ||
@@ -50,8 +57,8 @@ const capacityDiffLockInfo = {
           return;
         }
 
+        // Now we can apply the queryOptions to search the live cells.
         queryOptions ??= {};
-        // Now we can apply the queryOptions to search the matched live cells.
         queryOptions = {
           ...queryOptions,
           lock: script,
@@ -136,16 +143,16 @@ const capacityDiffLockInfo = {
       //===========================
       // II. Witness Placeholder
       //===========================
-      // Fill witness. These code are copied from https://github.com/ckb-js/lumos/blob/1cb43fe72dc95c4b3283acccb5120b7bcaeb9346/packages/common-scripts/src/secp256k1_blake160.ts#L90
+      // Fill witness. These code are copied from
+      // https://github.com/ckb-js/lumos/blob/1cb43fe72dc95c4b3283acccb5120b7bcaeb9346/packages/common-scripts/src/secp256k1_blake160.ts#L90
       //
-      // It takes a lot of code to set the witness for the first input cell in the script group to 8 bytes of zeros.
+      // It takes a lot of code to set the witness for the first input cell in
+      // the script group to 8 bytes of zeros.
       const firstIndex = txMutable
         .get("inputs")
         .findIndex((input) => isSameScript(input.cellOutput.lock, fromScript));
 
       if (firstIndex !== -1) {
-        // There's a potential performance improvement here. This function is called for each new cells, it's possible to set the witness only for the first cell in its script group.
-
         // Ensure witnesses are aligned to inputs
         const toFillWitnessesCount =
           firstIndex + 1 - txMutable.get("witnesses").size;
@@ -179,7 +186,9 @@ const capacityDiffLockInfo = {
         );
       }
 
+      /** @type {import("immutable").Map<byte[], {index:number, capacity:BI}>} */
       const balances = Map().asMutable();
+      // Group inputs by args and tally the total capacity as negative values.
       txSkeleton.get("inputs").forEach((input, index) => {
         const {
           capacity,
@@ -198,6 +207,7 @@ const capacityDiffLockInfo = {
           }
         }
       });
+      // Add capacity of output cells to the tally.
       txSkeleton.get("outputs").forEach((output) => {
         const {
           capacity,
@@ -211,6 +221,10 @@ const capacityDiffLockInfo = {
           balances.updateIn([args, "capacity"], (total) => total.add(capacity));
         }
       });
+      // Create signing entries. Indeed, for this simple script, we could set
+      // the witness directly. However, for serious lock script, it often
+      // requires sining by the private
+      // key.
       return txSkeleton.update("signingEntries", (entries) =>
         entries.concat(
           balances
@@ -218,6 +232,8 @@ const capacityDiffLockInfo = {
             .valueSeq()
             .map(({ index, capacity }) => ({
               index,
+              // This is the only supported type, which indicate the signature
+              // follows the WitnewsArgs layout.
               type: "witness_args_lock",
               message: codec.bytes.hexify(packInt64LE(capacity)),
             })),
@@ -234,9 +250,9 @@ beforeAll(() => {
   const hashes = readHashes();
 
   // Steps to register custom scripts
-
-  // 1. Add script on-chain info to config
-  // register script using the JSON exported from:
+  //
+  // 1. Add script on-chain info to config register script using the JSON
+  //    exported from:
   //
   //     ckb list-hashes -f json
   const cell = hashes.ckb_dev.system_cells.find((cell) =>
@@ -277,15 +293,10 @@ function customLockScript(lockArg) {
   };
 }
 
-async function fillAccount(indexer, to, capacity) {
+async function fillAccount(txSkeleton, to, capacity) {
   const minerAddress = lumos.helpers.encodeToAddress(
     secp256k1LockScript(process.env.MINER_LOCK_ARG),
   );
-
-  // first transfer 1000 CKB to cell locked by the custom script
-  let txSkeleton = lumos.helpers.TransactionSkeleton({
-    cellProvider: indexer,
-  });
 
   txSkeleton = await commons.common.transfer(
     txSkeleton,
@@ -320,12 +331,13 @@ test("miner transfers 100 CKB to alice", async () => {
   const minerAddress = lumos.helpers.encodeToAddress(
     secp256k1LockScript(process.env.MINER_LOCK_ARG),
   );
-  await fillAccount(indexer, customAddress, BigInt(1000 * 10 ** 8));
-
-  let txSkeleton = lumos.helpers.TransactionSkeleton({
+  let txSkeleton = TransactionSkeleton({
     cellProvider: indexer,
   });
 
+  await fillAccount(txSkeleton, customAddress, BigInt(1000 * 10 ** 8));
+
+  // txSkeleton is immutable, rember to save the return result.
   txSkeleton = await commons.common.transfer(
     txSkeleton,
     [customAddress],
