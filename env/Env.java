@@ -50,7 +50,7 @@ public abstract class Env {
     }
   }
 
-  static void waitForIndexer(int blockNumber) throws IOException, InterruptedException {
+  static void waitForIndexer(long blockNumber) throws IOException, InterruptedException {
     while (true) {
       var tip = rpc.getIndexerTip();
       if (tip.blockNumber >= blockNumber) {
@@ -77,13 +77,8 @@ public abstract class Env {
         count -= 1;
       }
     }
-    while (true) {
-      var indexerTip = rpc.getIndexerTip();
-      if (indexerTip.blockNumber >= expectedTip) {
-        return;
-      }
-      Thread.sleep(300);
-    }
+
+    waitForIndexer(expectedTip);
   }
 
   static void mineToCommited(byte[] txHash, int step) throws IOException, InterruptedException {
