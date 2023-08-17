@@ -10,3 +10,7 @@ path = "env/env.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ckb-sdk = "=2.5.0"
+ckb-types = "=0.108.0"
+ckb-jsonrpc-types = "=0.108.0"
+dotenv = "0.15.0"
