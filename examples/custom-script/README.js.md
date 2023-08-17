@@ -18,6 +18,17 @@ Inside `LockScriptInfo.lockScriptInfo`, the lock script must implement following
 
 [lumos.commons.common.prepareSigningEntries]: https://lumos-website-git-stable-magickbase.vercel.app/api/modules/common_scripts.html#preparesigningentries-13
 
+## Summary
+
+-   Live Cells Collector: Script is responsible for live cells filtering via `CellCollector`
+-   Dep Cell: Via `setupInputCell`
+-   Pre-fill Witness: Required, via `setupInputCell`
+-   Signing: Via `prepareSigningEntries` and an external helper to generate signatures from signing entries.
+-   Extra Data
+    -   Has access to input cells
+    -   Cannot access dep headers
+    -   `LockScriptInfo `cannot receive extra data from client.
+
 ## Issues
 
 -   `LockScriptInfo` lacks documentations about the interfaces.

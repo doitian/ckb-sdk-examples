@@ -7,6 +7,17 @@ The JAVA SDK provides two tools for transaction handling: [CkbTransactionBuilder
 [CkbTransactionBuilder]: https://github.com/nervosnetwork/ckb-sdk-java/blob/master/ckb/src/main/java/org/nervos/ckb/transaction/CkbTransactionBuilder.java
 [TransactionSigner]: https://github.com/nervosnetwork/ckb-sdk-java/blob/master/core/src/main/java/org/nervos/ckb/sign/TransactionSigner.java
 
+## Summary
+
+-   Live Cells Collector: The client must filter live cells. It's not possible for script handlers to filter out newly discovered live cells.
+-   Dep Cell: Via `ScriptHandler`
+-   Pre-fill Witness: Required, via `ScriptHandler`
+-   Signing: Via `ScriptSigner`
+-   Extra Data
+    -   Cannot access input cells
+    -   Cannot access dep headers
+    -   Client can pass any object as the context to `ScriptHandler` and `ScriptSigner`
+
 ## Transaction Builder
 
 The `CkbTransactionBuilder` can register `ScriptHandler`s for both type scripts and lock scripts through [TransactionBuilderConfiguration]. Upon calling `CkbTransactionBuilder#build`, the builder will sequentially execute the `Scripthandler#buildTransaction` method of all registered handlers.
