@@ -2,7 +2,9 @@ package env
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"os/exec"
@@ -13,44 +15,91 @@ import (
 
 	"github.com/antelman107/net-wait-go/wait"
 	"github.com/joho/godotenv"
+	"github.com/nervosnetwork/ckb-sdk-go/v2/collector"
+	"github.com/nervosnetwork/ckb-sdk-go/v2/collector/builder"
+	"github.com/nervosnetwork/ckb-sdk-go/v2/collector/handler"
 	"github.com/nervosnetwork/ckb-sdk-go/v2/rpc"
+	"github.com/nervosnetwork/ckb-sdk-go/v2/types"
 )
 
-var RootDir string
+var (
+	RootDir string
+	Hashes  CKBHashes
+)
 
 func init() {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "failed to get root dir")
-		os.Exit(1)
+		log.Fatal("Failed to get root dir")
 	}
 	RootDir = path.Dir(path.Dir(filename))
 
 	godotenv.Load(path.Join(RootDir, ".env"))
+
+	content, err := os.ReadFile(path.Join(RootDir, "var", "hashes.json"))
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	err = json.Unmarshal(content, &Hashes)
+	if err != nil {
+		log.Fatal("Error during Unmarshal(): ", err)
+	}
 }
 
-func TestMain(m *testing.M) {
+func testMainRun(m *testing.M) int {
 	ckb := NewCKBProcess()
 	defer func() { ckb.Cancel() }()
 
 	if err := ckb.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to start ckb: %s", err)
-		os.Exit(1)
+		log.Fatal("Failed to start ckb: ", err)
 	}
-	os.Exit(m.Run())
+
+	return m.Run()
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(testMainRun(m))
 }
 
 type CKBProcess struct {
-	cmd *exec.Cmd
+	cmd    *exec.Cmd
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func NewCKBProcess() *CKBProcess {
 	script := path.Join(RootDir, "bin", "ckb-node.sh")
-	cmd := exec.Command(script)
+	ctx, cancel := context.WithCancel(context.Background())
+	cmd := exec.CommandContext(ctx, script)
 	cmd.Stdin = nil
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-	return &CKBProcess{cmd: cmd}
+	return &CKBProcess{cmd: cmd, ctx: ctx, cancel: cancel}
+}
+
+// Dev chain requires a custom builder to register the corrrect cell dep information.
+func NewCkbTransactionBuilder(iterator collector.CellIterator) *builder.CkbTransactionBuilder {
+	s := builder.SimpleTransactionBuilder{}
+
+	secp256k1Cell := Hashes["ckb_dev"].SystemCells[0]
+	secp256k1DepGroup := Hashes["ckb_dev"].DepGroups[0]
+	s.Register(&handler.Secp256k1Blake160SighashAllScriptHandler{
+		CellDep: &types.CellDep{
+			OutPoint: &types.OutPoint{
+				TxHash: types.HexToHash(secp256k1DepGroup.TxHash),
+				Index:  secp256k1DepGroup.Index,
+			},
+			DepType: types.DepTypeDepGroup,
+		},
+		CodeHash: types.HexToHash(secp256k1Cell.TypeHash),
+	})
+
+	// There's no open interface to create a builder without a network, so create
+	// one for testnet than replace the underlying SimpleTransactionBuilder.
+	b := builder.NewCkbTransactionBuilder(types.NetworkTest, iterator)
+	b.SimpleTransactionBuilder = s
+	return b
 }
 
 func (p *CKBProcess) Start() error {
@@ -93,8 +142,11 @@ func (p *CKBProcess) Start() error {
 	return nil
 }
 
-func (p *CKBProcess) Cancel() error {
-	return p.cmd.Cancel()
+func (p *CKBProcess) Cancel() {
+	if p.cmd.Cancel != nil {
+		p.cmd.Cancel()
+	}
+	p.cancel()
 }
 
 func WaitUntil(ctx context.Context, timeout time.Duration, pred func() bool) error {
@@ -112,4 +164,28 @@ func WaitUntil(ctx context.Context, timeout time.Duration, pred func() bool) err
 			time.Sleep(300 * time.Millisecond)
 		}
 	}
+}
+
+type CKBHashes map[string]CKBHashesNetwork
+
+type CKBHashesNetwork struct {
+	SpecHash    string `json:"spec_hash"`
+	Genesis     string
+	Cellbase    string
+	SystemCells []CKBHashesSystemCell `json:"system_cells"`
+	DepGroups   []CKBHashesDepGroup   `json:"dep_groups"`
+}
+
+type CKBHashesSystemCell struct {
+	Path     string
+	TxHash   string `json:"tx_hash"`
+	DataHash string `json:"data_hash"`
+	TypeHash string `json:"type_hash"`
+	Index    uint32
+}
+
+type CKBHashesDepGroup struct {
+	TxHash        string   `json:"tx_hash"`
+	IncludedCells []string `json:"included_cells"`
+	Index         uint32
 }

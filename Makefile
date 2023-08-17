@@ -1,3 +1,6 @@
+wip:
+	go test -v ./examples/custom-script
+
 all: js go java rust
 
 js:
