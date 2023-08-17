@@ -13,3 +13,4 @@ CapacityDiff verifies the witness matches the capacity difference.
 ## Examples
 
 -   [Java](README.java.md)
+-   [Lumos (JavaScript)](README.js.md)
