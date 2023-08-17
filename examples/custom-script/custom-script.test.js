@@ -111,7 +111,10 @@ const capacityDiffLockInfo = {
 
       // 3. Set Since
       if (since) {
-        txMutable.setIn(["inputSinces", -1], since);
+        txMutable.setIn(
+          ["inputSinces", txMutable.get("inputs").size - 1],
+          since,
+        );
       }
 
       // 4. Insert a witness to ensure they are aligned to the location of the corresponding input cells.
