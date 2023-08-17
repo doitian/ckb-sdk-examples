@@ -71,7 +71,7 @@ public abstract class Env {
     // - Send multiple `generate_block` in a batch is two fast that tx pool has no
     // chance to refresh.
     while (count > 0) {
-      var tipHash = Numeric.toHexString(rpc.getTipHeader().hash);
+      var tipHash = Numeric.toHexString(rpc.getBlockHash(rpc.getTipBlockNumber()));
       var resp = rpc.batchRPC(batchRequest).get(0);
       if (resp.error == null && !resp.result.equals(tipHash)) {
         count -= 1;

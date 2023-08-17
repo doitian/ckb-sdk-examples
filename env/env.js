@@ -62,6 +62,9 @@ export async function waitForIndexerReady(rpc, blockNumber) {
   }
 }
 
+/**
+ * @param rpc {import("@ckb-lumos/lumos").RPC}
+ */
 export async function mine(rpc, count) {
   if (!rpc.generateBlock) {
     rpc.addMethod({
@@ -75,7 +78,8 @@ export async function mine(rpc, count) {
   const expectedTip = BI.from(await rpc.getTipBlockNumber()).add(count);
 
   while (count > 0) {
-    const tipHash = (await rpc.getTipHeader()).hash;
+    const tipNumber = await rpc.getTipBlockNumber();
+    const tipHash = await rpc.getBlockHash(tipNumber);
     const minedHash = await rpc.generateBlock();
     if (tipHash !== minedHash) {
       count -= 1;
