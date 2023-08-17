@@ -120,26 +120,13 @@ func (p *CKBProcess) Start() error {
 		return fmt.Errorf("rpc is not available")
 	}
 
-	ckbClient, err := rpc.Dial(os.Getenv("CKB_RPC_URL"))
+	client, err := rpc.Dial(os.Getenv("CKB_RPC_URL"))
 	if err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithCancelCause(context.Background())
-
-	if err := WaitUntil(ctx, 2*time.Minute, func() bool {
-		tip, err := ckbClient.GetIndexerTip(ctx)
-		if err != nil {
-			cancel(err)
-			return false
-		}
-
-		return tip != nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	ctx := context.Background()
+	return WaitForIndexerReady(ctx, client, 0)
 }
 
 func (p *CKBProcess) Cancel() {
@@ -164,6 +151,67 @@ func WaitUntil(ctx context.Context, timeout time.Duration, pred func() bool) err
 			time.Sleep(300 * time.Millisecond)
 		}
 	}
+}
+
+func allZeros(s []byte) bool {
+	for _, v := range s {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func WaitForIndexerReady(ctx context.Context, client rpc.Client, blockNumber uint64) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	return WaitUntil(ctx, 2*time.Minute, func() bool {
+		tip, err := client.GetIndexerTip(ctx)
+		if err != nil {
+			cancel(err)
+			return false
+		}
+
+		return tip != nil && !allZeros(tip.BlockHash[:]) && tip.BlockNumber >= blockNumber
+	})
+}
+
+func Mine(ctx context.Context, client rpc.Client, count uint64) error {
+	var newMinedBlockHash types.Hash
+	for count > 0 {
+		tipNumber, err := client.GetTipBlockNumber(ctx)
+		if err != nil {
+			return err
+		}
+		tipHash, err := client.GetBlockHash(ctx, tipNumber)
+		if err != nil {
+			return err
+		}
+		if err := client.CallContext(ctx, &newMinedBlockHash, "generate_block"); err != nil {
+			return err
+		}
+		if newMinedBlockHash != *tipHash {
+			count -= 1
+		}
+	}
+	return nil
+}
+
+func MineUntilCommitted(ctx context.Context, client rpc.Client, txHash types.Hash, step uint64) error {
+	ctx, cancel := context.WithCancelCause(ctx)
+	return WaitUntil(ctx, 2*time.Minute, func() bool {
+		if err := Mine(ctx, client, step); err != nil {
+			cancel(err)
+			return false
+		}
+
+		txWithStatus, err := client.GetTransaction(ctx, txHash)
+		if err != nil {
+			cancel(err)
+			return false
+		}
+
+		return txWithStatus.TxStatus.Status == types.TransactionStatusCommitted
+	})
 }
 
 type CKBHashes map[string]CKBHashesNetwork

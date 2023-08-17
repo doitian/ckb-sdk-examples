@@ -150,6 +150,8 @@ class CustomScriptTest extends Env {
       // is unfortunate that the offline script handler has weaker capabilities
       // compared to the online contract, given that the contract can obtain input
       // cell and dep headers through syscalls.
+      //
+      // An alternative solution is fetching the cell fields via RPC.
       final var thisContext = (CapacityDiffContext) context.getPayload();
       final var thisScript = scriptGroup.getScript();
 
