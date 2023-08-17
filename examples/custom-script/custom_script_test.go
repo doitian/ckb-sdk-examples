@@ -75,6 +75,10 @@ func (r *CapacityDiffScriptHandler) BuildTransaction(builder collector.Transacti
 
 type CapacityDiffScriptSigner struct{}
 
+// The CapacityDiffContext serves two purposes: first, as a flag for the script
+// signer to work on the transaction, and second, to aid in retrieving input
+// cell fields. While CkbTransactionBuilder has stored the input cell, it does
+// not offers interfaces to access them.
 func (s *CapacityDiffScriptSigner) SignTransaction(tx *types.Transaction, group *transaction.ScriptGroup, ctx *transaction.Context) (bool, error) {
 	scriptContext, ok := ctx.Payload.(CapacityDiffContext)
 	if !ok {
