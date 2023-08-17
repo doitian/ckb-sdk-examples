@@ -2,10 +2,12 @@ use ckb_jsonrpc_types::Status;
 use ckb_sdk::{rpc::ckb_indexer, CkbRpcClient};
 use ckb_types::H256;
 use dotenv::dotenv;
-use std::env;
-use std::io::{Error, ErrorKind, Result};
-use std::process::{Child, Command};
-use std::{thread, time};
+use std::{
+    env,
+    io::{Error, ErrorKind, Result},
+    process::{Child, Command},
+    thread, time,
+};
 
 pub struct Env {
     pub ckb: Child,
