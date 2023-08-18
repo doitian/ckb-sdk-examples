@@ -30,8 +30,10 @@ function kill_and_wait() {
 
 if [ -f "$ROOT_DIR/run/ckb.pid" ]; then
   CKB_PID="$(cat "$ROOT_DIR/run/ckb.pid")"
-  echo "Kill existing ckb process $CKB_PID"
-  kill_and_wait "$CKB_PID"
+  if kill -0 "$CKB_PID" &>/dev/null; then
+    echo "Kill existing ckb process $CKB_PID"
+    kill_and_wait "$CKB_PID"
+  fi
   rm -f "$ROOT_DIR/run/ckb.pid"
 fi
 rm -rf "$CKB_DIR"
@@ -54,7 +56,9 @@ sed_i "s/0xc8328aabcd9b9e8e64fbc566c4385c3bdeb219d7/$MINER_LOCK_ARG/" "$CKB_DIR/
 sed_i "s/0x470dcdc5e44064909650113a274b3b36aecb6dc7/$MINER_LOCK_ARG/" "$CKB_DIR/specs/dev.toml"
 
 sed_i 's/"Debug"\]/"Debug", "Indexer", "IntegrationTest"]/' "$CKB_DIR/ckb.toml"
-sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
+if [ -n "${DEBUG:-}" ]; then
+  sed_i 's/filter = "info"/filter = "debug"/' "$CKB_DIR/ckb.toml"
+fi
 
 # deploy another copy of secp256k1
 sed_i '/\[genesis\.system_cells_lock\]/c\
