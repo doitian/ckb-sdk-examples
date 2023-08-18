@@ -30,8 +30,10 @@ function kill_and_wait() {
 
 if [ -f "$ROOT_DIR/run/ckb.pid" ]; then
   CKB_PID="$(cat "$ROOT_DIR/run/ckb.pid")"
-  echo "Kill existing ckb process $CKB_PID"
-  kill_and_wait "$CKB_PID"
+  if kill -0 "$CKB_PID" &>/dev/null; then
+    echo "Kill existing ckb process $CKB_PID"
+    kill_and_wait "$CKB_PID"
+  fi
   rm -f "$ROOT_DIR/run/ckb.pid"
 fi
 rm -rf "$CKB_DIR"
