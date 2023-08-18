@@ -1,5 +1,4 @@
-use ckb_sdk_examples_env::Env;
-use std::io::Result;
+use ckb_sdk_examples_env::{Env, Result};
 use std::{thread, time};
 
 fn main() -> Result<()> {

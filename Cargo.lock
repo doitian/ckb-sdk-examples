@@ -441,6 +441,8 @@ dependencies = [
  "ckb-sdk",
  "ckb-types",
  "dotenv",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
