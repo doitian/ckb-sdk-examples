@@ -15,22 +15,28 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 pub struct Env {
     pub ckb: Child,
-    pub rpc: CkbRpcClient,
     pub dev: CKBHashesNetwork,
+    pub rpc: CkbRpcClient,
+    pub rpc_endpoint: String,
 }
 
 impl Env {
     pub fn try_new() -> Result<Env> {
         dotenv()?;
 
-        let rpc = CkbRpcClient::new(&env::var("CKB_RPC_URL")?);
         let mut hashes: HashMap<String, CKBHashesNetwork> =
             serde_json::from_str(&fs::read_to_string("var/hashes.json")?)?;
         let dev = hashes.remove("ckb_dev").ok_or("expect ckb_dev in hashes")?;
-
+        let rpc_endpoint = env::var("CKB_RPC_URL")?;
+        let rpc = CkbRpcClient::new(&rpc_endpoint);
         let ckb = Command::new("bin/ckb-node.sh").spawn()?;
 
-        let mut env = Env { ckb, rpc, dev };
+        let mut env = Env {
+            ckb,
+            dev,
+            rpc,
+            rpc_endpoint,
+        };
 
         while env.wait_for_indexer(0).is_err() {
             thread::sleep(time::Duration::from_millis(300));
@@ -62,8 +68,8 @@ impl Env {
                 .get_block_hash(tip_number)?
                 .ok_or("tip hash not found")?;
 
-            let new_hash = self.rpc.generate_block(None, None)?;
-
+            // let new_hash = self.rpc.generate_block()?;
+            let new_hash: H256 = self.rpc.post("generate_block", ())?;
             if new_hash != tip_hash {
                 count -= 1;
             }
@@ -72,7 +78,7 @@ impl Env {
         Ok(())
     }
 
-    pub fn mine_to_committed(&mut self, hash: H256, step: u64) -> Result<()> {
+    pub fn mine_to_committed(&mut self, hash: &H256, step: u64) -> Result<()> {
         loop {
             self.mine(step)?;
 
@@ -101,13 +107,14 @@ pub struct CKBHashesNetwork {
 
 #[derive(Deserialize)]
 pub struct CKBHashesSystemCell {
-    pub tx_hash: String,
-    pub type_hash: Option<String>,
+    pub tx_hash: H256,
+    pub type_hash: Option<H256>,
+    pub data_hash: H256,
     pub index: u32,
 }
 
 #[derive(Deserialize)]
 pub struct CKBHashesDepGroup {
-    pub tx_hash: String,
+    pub tx_hash: H256,
     pub index: u32,
 }
